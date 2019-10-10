@@ -1,0 +1,48 @@
+---
+title: "2. házi feladat"
+output: html_document
+---
+#Előkészületek
+```{R}
+library(data.table)
+library(ggplot2)
+library(scales)
+crime <- fread("C:/Users/barat_ojs0p6a/Documents/eltecon-ds-class/data/crime.csv")
+```
+#1. az adattáblában keressétek meg, hogy melyik az 5 leggyakoribb "OFFENSE_CODE_GROUP", csak azokra a sorokra leszűrve, ahol a "SHOOTING" értéke "Y".
+```{R}
+topFiveOffense <- crime[SHOOTING == "Y", .N, by = OFFENSE_CODE_GROUP] [order(-N)][1:5][[1]]
+topFiveOffense
+```
+#2. az eredeti adattáblát szűrjétek le azokra a sorokra, ahol a "SHOOTING" értéke "Y", ÉS az "OFFENSE_CODE_GROUP" oszlop értéke az 1.-es pontban kiszámolt 5 leggyakoribb valamelyike.
+```{R}
+
+crimeTopFive <- crime[SHOOTING == "Y" & OFFENSE_CODE_GROUP %in% topFiveOffense]
+crimeTopFive
+
+```
+
+#3. Vizualizáljátok ezen bűnesetek gyakoriságát, órák szerint, és valamilyen módon (szín, facet, stb.) elkülönítve egymástól az 5 "OFFENSE_CODE_GROUP"-ot.
+```{R}
+crimeToPlot <- crimeTopFive[, .N, by = c("HOUR", "OFFENSE_CODE_GROUP")]
+
+ggplot(crimeToPlot, aes(x = HOUR, y = N)) +
+    geom_col(width = 0.6, fill = rgb(231, 76, 60, max = 255)) +
+    facet_wrap((~OFFENSE_CODE_GROUP), scales = "free") +
+    viridis::scale_fill_viridis(discrete = TRUE) +
+    theme_minimal() +
+    ylab("Number of crimes") +
+    scale_y_continuous(breaks = pretty_breaks()) +
+    xlab("Hour") +
+    labs(title = "The 5 most common shooting crimes")
+```
+
+#A markdown fájlban a kód mellett írjatok pár szót arról is, hogy milyen mintázatot fedeztek fel az adatban, és annak milyen lehetséges magyarázata van.
+
+#A súlyos testi sértések száma aránylag a legamasabb az összes közül. 
+
+#Reggel 5-7 körül nagyon alacsony az összes bűncselekmény típus száma (esetenként 0), míg a csúcsokban eltérések vannak: a gyilkosságok és a súlyos testi sérétek száma délutántól estig egyre nő, majd éjfélkor a legmagasabb, a ballistics ennél sokkal rendszertelenebb, de az éjféli csúcs itt is jellemző.
+
+#A súlyos testi sértés és a gyilkosság azért mutathat nagyon hasonló trendet, mert az utóbbi az előbbi egy súlyosabb változata. 
+
+
